@@ -1,9 +1,4 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using JetBrains.Annotations;
 using UnityEngine;
 using Plane = UnityEngine.Plane;
 using Vector3 = UnityEngine.Vector3;
@@ -14,14 +9,14 @@ public class Example : MonoBehaviour
     // transform position.
     public int lineCount = 100;
     public float radius = 3.0f;
-    public Camera camera;
-    
+    public Camera cam;
+
     private Plane plane;
     static Material lineMaterial;
     private Line mainLine;
     private Line XAxis;
     private Line YAxis;
-    
+
     // Line struct
     class Line
     {
@@ -34,7 +29,7 @@ public class Example : MonoBehaviour
             points = new List<Vector3>();
             color = col;
         }
-        public Line(Color col,Vector3 p0, Vector3 p1)
+        public Line(Color col, Vector3 p0, Vector3 p1)
         {
             points = new List<Vector3>();
             add(p0);
@@ -53,46 +48,43 @@ public class Example : MonoBehaviour
         public void add(Vector3[] tab)
         {
             foreach (var p in tab)
-            {
                 points.Add(p);
-            }
         }
-        
+
         // Draw the line
         public void drawLine2D()
         {
             if (points.Count >= 2)
             {
                 GL.Color(color);
-                for(int i = 0; i < points.Count - 1; i++)
+                for (int i = 0; i < points.Count - 1; i++)
                 {
-                    GL.Vertex3(points[i].x,points[i].y,points[i].z);
-                    GL.Vertex3(points[i+1].x,points[i+1].y,points[i+1].z);
+                    GL.Vertex3(points[i].x, points[i].y, points[i].z);
+                    GL.Vertex3(points[i + 1].x, points[i + 1].y, points[i + 1].z);
                 }
             }
-            
         }
     }
-    
+
     public void Start()
     {
         mainLine = new Line(Color.black);
         XAxis = new Line(Color.red);
-        XAxis.add(-1,0,0);
-        XAxis.add(1,0,0);
-        
+        XAxis.add(-1, 0, 0);
+        XAxis.add(1, 0, 0);
+
         YAxis = new Line(Color.green);
-        YAxis.add(0,-1,0);
-        YAxis.add(0,1,0);
+        YAxis.add(0, -1, 0);
+        YAxis.add(0, 1, 0);
 
         plane = new Plane(new Vector3(0, 0, -1), 0);
-    }   
+    }
 
     private void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            Ray ray = camera.ScreenPointToRay(Input.mousePosition);
+            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
             float enter = 0f;
             Vector3 position;
             plane.Raycast(ray, out enter);
@@ -101,9 +93,6 @@ public class Example : MonoBehaviour
             mainLine.add(position);
         }
     }
-
-
-    
 
     static void CreateLineMaterial()
     {
@@ -141,7 +130,6 @@ public class Example : MonoBehaviour
         XAxis.drawLine2D();
         YAxis.drawLine2D();
         mainLine.drawLine2D();
-
 
         GL.End();
         GL.PopMatrix();
