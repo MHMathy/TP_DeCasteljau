@@ -2,7 +2,10 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using UnityEngine;
+using Plane = UnityEngine.Plane;
+using Vector3 = UnityEngine.Vector3;
 
 public class Example : MonoBehaviour
 {
@@ -10,45 +13,96 @@ public class Example : MonoBehaviour
     // transform position.
     public int lineCount = 100;
     public float radius = 3.0f;
-
-    static Material lineMaterial;
+    public Camera camera;
     
-
-    struct Line
+    private Plane plane;
+    static Material lineMaterial;
+    private Line mainLine;
+    private Line XAxis;
+    private Line YAxis;
+    
+    // Line struct
+    class Line
     {
-        public Vector3[] points;
-        public Color color;
-
-        public Line(int nbPoints, Color col)
+        // All points of the line
+        private List<Vector3> points;
+        // The line color
+        private Color color;
+        public Line(Color col)
         {
-            points = new Vector3[nbPoints];
+            points = new List<Vector3>();
             color = col;
         }
-        public void drawLine()
+        public Line(Color col,Vector3 p0, Vector3 p1)
         {
-            GL.Color(color);
-            for (int i = 0; i < points.Length - 1; i++)
+            points = new List<Vector3>();
+            add(p0);
+            add(p1);
+            color = col;
+        }
+
+        public void add(float x, float y, float z)
+        {
+            points.Add(new Vector3(x, y, z));
+        }
+        public void add(Vector3 p)
+        {
+            points.Add(p);
+        }
+        public void add(Vector3[] tab)
+        {
+            foreach (var p in tab)
             {
-                GL.Vertex3(points[i].x,points[i].y,points[i].z);
-                GL.Vertex3(points[i+1].x,points[i+1].y,points[i+1].z);
+                points.Add(p);
             }
         }
+        
+        // Draw the line
+        public void drawLine2D()
+        {
+            if (points.Count >= 2)
+            {
+                GL.Color(color);
+                for(int i = 0; i < points.Count - 1; i++)
+                {
+                    GL.Vertex3(points[i].x,points[i].y,points[i].z);
+                    GL.Vertex3(points[i+1].x,points[i+1].y,points[i+1].z);
+                }
+            }
+            
+        }
     }
-    
-    private Line mainLine;
     
     public void Start()
     {
-        mainLine = new Line(6,Color.red);
-        mainLine.points[0]= new Vector3(0,0,0);
-        mainLine.points[1]= new Vector3(1,1,0);
-        mainLine.points[2]= new Vector3(2,1,0);
-        mainLine.points[3]= new Vector3(3,3,0);
-        mainLine.points[4]= new Vector3(4,2,0);
-        mainLine.points[5]= new Vector3(5,1,0);
+        mainLine = new Line(Color.black);
+        XAxis = new Line(Color.red);
+        XAxis.add(-1,0,0);
+        XAxis.add(1,0,0);
         
-        mainLine.color = Color.red;
+        YAxis = new Line(Color.green);
+        YAxis.add(0,-1,0);
+        YAxis.add(0,1,0);
+
+        plane = new Plane(new Vector3(0, 0, -1), 0);
+    }   
+
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            Ray ray = camera.ScreenPointToRay(Input.mousePosition);
+            float enter = 0f;
+            Vector3 position;
+            plane.Raycast(ray, out enter);
+            position = ray.GetPoint(enter);
+            Debug.Log(position);
+            mainLine.add(position);
+        }
     }
+
+
+    
 
     static void CreateLineMaterial()
     {
@@ -83,8 +137,9 @@ public class Example : MonoBehaviour
 
         // Draw lines
         GL.Begin(GL.LINES);
-        
-        mainLine.drawLine();
+        XAxis.drawLine2D();
+        YAxis.drawLine2D();
+        mainLine.drawLine2D();
 
 
         GL.End();
