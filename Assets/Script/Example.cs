@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using JetBrains.Annotations;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using Plane = UnityEngine.Plane;
 using Vector3 = UnityEngine.Vector3;
@@ -15,20 +15,25 @@ public class Example : MonoBehaviour
     public int lineCount = 100;
     public float radius = 3.0f;
     public Camera camera;
+    public float pas;
     
     private Plane plane;
     static Material lineMaterial;
     private Line mainLine;
+    private int IndexlastPoint;
+    Line temp = new Line(Color.red);
+    Line BezierLine = new Line(Color.blue);
     private Line XAxis;
     private Line YAxis;
+    private float t = 0;
     
     // Line struct
     class Line
     {
         // All points of the line
-        private List<Vector3> points;
+        public List<Vector3> points;
         // The line color
-        private Color color;
+        public Color color;
         public Line(Color col)
         {
             points = new List<Vector3>();
@@ -56,6 +61,31 @@ public class Example : MonoBehaviour
             {
                 points.Add(p);
             }
+        }
+
+        public List<Vector3> fillList(List<Vector3> target ,List<Vector3> source)
+        {
+            for (int i = 0; i < source.Count; i++)
+            {
+                target.Add(source[i]);
+            }
+
+            return target;
+        }
+
+        public Vector3 getPoint(int index)
+        {
+            return this.points[index];
+        }
+
+        public int getPointSize()
+        {
+            return this.points.Count;
+        }
+        
+        public Color getColor()
+        {
+            return this.color;
         }
         
         // Draw the line
@@ -99,6 +129,18 @@ public class Example : MonoBehaviour
             position = ray.GetPoint(enter);
             Debug.Log(position);
             mainLine.add(position);
+            
+            IndexlastPoint = mainLine.getPointSize();
+        }
+
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            for (float i = 0; i <= 1; i += pas )
+            {
+                
+                BezierLine.points.Add(CalculateBezier(i));
+            }
+            
         }
     }
 
@@ -141,9 +183,39 @@ public class Example : MonoBehaviour
         XAxis.drawLine2D();
         YAxis.drawLine2D();
         mainLine.drawLine2D();
-
+        BezierLine.drawLine2D();
 
         GL.End();
         GL.PopMatrix();
+    }
+
+    // on calcul un point de la bezier
+    public Vector3 CalculateBezier(float t)
+    {
+        List<Vector3> bezierPoint = new List<Vector3>();
+
+        for (int level = mainLine.points.Count - 1; level >= 0; level--)
+        {
+            if (level == mainLine.points.Count - 1)
+            {
+                for (int i = 0; i <= mainLine.points.Count - 1; i++)
+                {
+                    bezierPoint.Add(mainLine.points[i]);
+                }
+
+                continue;
+            }
+            int lastIndex = bezierPoint.Count;
+            int levelIndex = level + 2;
+            int index = lastIndex - levelIndex;
+            for (int i = 0; i <= level; i++)
+            {
+                Vector3 Point = (1 - t) * bezierPoint[index] + t * bezierPoint[index + 1];
+                bezierPoint.Add(Point);
+                ++index;
+            }
+        }
+        int lastElem = bezierPoint.Count -1;
+        return bezierPoint[lastElem];
     }
 }
