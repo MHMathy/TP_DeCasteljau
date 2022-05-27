@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using Plane = UnityEngine.Plane;
+using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 
 public class Example : MonoBehaviour
@@ -26,7 +27,10 @@ public class Example : MonoBehaviour
     private Line XAxis;
     private Line YAxis;
     private float t = 0;
+
+    private List<Line> ListeCourbe = new List<Line>();
     
+    public GameObject PointPrefab;
     // Line struct
     class Line
     {
@@ -100,7 +104,6 @@ public class Example : MonoBehaviour
                     GL.Vertex3(points[i+1].x,points[i+1].y,points[i+1].z);
                 }
             }
-            
         }
     }
     
@@ -116,28 +119,33 @@ public class Example : MonoBehaviour
         YAxis.add(0,1,0);
 
         plane = new Plane(new Vector3(0, 0, -1), 0);
+        
     }   
 
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            Ray ray = camera.ScreenPointToRay(Input.mousePosition);
-            float enter = 0f;
-            Vector3 position;
-            plane.Raycast(ray, out enter);
-            position = ray.GetPoint(enter);
-            Debug.Log(position);
-            mainLine.add(position);
-            
-            IndexlastPoint = mainLine.getPointSize();
+        if (Input.GetKeyDown(KeyCode.Z) )
+        { 
+            Debug.Log("point");
+            ListeCourbe.Add(DessinerPoints(mainLine));
         }
 
         if (Input.GetKeyDown(KeyCode.A))
         {
             for (float i = 0; i <= 1; i += pas )
             {
-                
+                BezierLine.points.Add(CalculateBezier(i));
+            }
+            
+        }
+        if (Input.GetKeyDown(KeyCode.E) )
+        {
+            ListeCourbe.Add(DessinerPoints(mainLine));
+        }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            for (float i = 0; i <= 1; i += pas )
+            {
                 BezierLine.points.Add(CalculateBezier(i));
             }
             
@@ -145,7 +153,19 @@ public class Example : MonoBehaviour
     }
 
 
-    
+    Line DessinerPoints(Line lineExt)
+    {
+        Ray ray = camera.ScreenPointToRay(Input.mousePosition);
+        float enter = 0f;
+        Vector3 position;
+        plane.Raycast(ray, out enter);
+        position = ray.GetPoint(enter);
+        Debug.Log(position);
+        lineExt.add(position);
+        Instantiate(PointPrefab,position,Quaternion.identity);
+        IndexlastPoint = lineExt.getPointSize();
+        return lineExt;
+    }
 
     static void CreateLineMaterial()
     {
