@@ -1,9 +1,13 @@
 fileFormatVersion: 2
-guid: db6b341358620e844ac088dacfafda1f
+guid: c756b0aaf97dc6e4a9ef6f7919e73365
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - camera: {instanceID: 0}
+  - pointPrefab: {fileID: 593747852200763459, guid: 72019e8f54d23094984ee3075c2ca016, type: 3}
+  - pointBezier: {fileID: 5586016997274396152, guid: cde1cab9323866e469629a47ee1e27eb, type: 3}
+  - courbe: {fileID: 5463878432820487022, guid: 963853334e549674db9b1636bf0ef5bc, type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
