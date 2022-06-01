@@ -32,7 +32,6 @@ public class drag : MonoBehaviour
             }
             else
             {
-                
                 Vector3 position = new Vector3(Input.mousePosition.x, Input.mousePosition.y,
                     Camera.main.WorldToScreenPoint(selectedObject.transform.position).z);
                 Vector3 worldPosition = Camera.main.ScreenToWorldPoint(position);
@@ -49,7 +48,6 @@ public class drag : MonoBehaviour
             Vector3 worldPosition = Camera.main.ScreenToWorldPoint(position);
             selectedObject.transform.position = new Vector3(worldPosition.x, worldPosition.y +.25f, worldPosition.z);
         }
-        
     }
 
     private RaycastHit castRay()

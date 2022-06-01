@@ -5,11 +5,15 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using TMPro;
+using UnityEditor;
+using UnityEditorInternal.VersionControl;
 using UnityEngine;
 using UnityEngine.UI;
+using Matrix4x4 = UnityEngine.Matrix4x4;
 using Plane = UnityEngine.Plane;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
+using Matrice3 = Matrice.Matrice3x3;
 
 
 public class Bezier : MonoBehaviour
@@ -20,7 +24,6 @@ public class Bezier : MonoBehaviour
     public float radius = 3.0f;
     public Camera camera;
     public float pas;
-    
     private Plane plane;
     static Material lineMaterial;
 
@@ -38,16 +41,15 @@ public class Bezier : MonoBehaviour
     private List<GameObject> EnveloppeConvexe2 = new List<GameObject>();
     private List<GameObject> BezierEnveloppeConvexe1 = new List<GameObject>();
     private List<GameObject> BezierEnveloppeConvexe2 = new List<GameObject>();
-    private float t = 0;
 
     private List<List<GameObject>> ListeCourbe = new List<List<GameObject>>();
-    
+
+    private List<GameObject> ListeSelectioned = new List<GameObject>();
+
+
     public GameObject pointPrefab;
     public GameObject pointPrefab2;
     public GameObject pointBezier;
-
-    public Material green;
-    public Material red;
 
     private GameObject selectedObject = null;
     public GameObject courbe;
@@ -55,17 +57,43 @@ public class Bezier : MonoBehaviour
     public Canvas ui;
     public Text pasValue;
     private Slider slider;
+    [SerializeField]
+    private float pasDep =0.1f;
+    public Slider sliderDeplacement;
+    public Text pasDepValue;
     public void Start()
     {
  
         plane = new Plane(new Vector3(0, 0, -1), 0);
+        
         slider = ui.GetComponentInChildren<Slider>();
         pasValue.text = pas.ToString();
         slider.value = pas;
+        pasDepValue.text = pasDep.ToString();
+        sliderDeplacement.value = pasDep;
     }   
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            RaycastHit hit = castRay();
+            if (hit.collider != null)
+            {
+                Debug.Log(hit.transform.position.x+ " " +hit.transform.position.y);
+            }
+        }
+        pasDep = sliderDeplacement.value;
+        pasDepValue.text = sliderDeplacement.value.ToString();
+        pas = slider.value;
+        pasValue.text = slider.value.ToString();
+        
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            ListeSelectioned.Clear();
+            Debug.Log("Liste vidée");
+        }
+        
         if (Input.GetKeyDown(KeyCode.Z) )
         {
             DessinerPoints(GameobjectList,pointPrefab);
@@ -109,10 +137,99 @@ public class Bezier : MonoBehaviour
         {
             DeletePoint();
         }
-        pas = slider.value;
-        pasValue.text = slider.value.ToString();
+
+        if (Input.GetKeyDown(KeyCode.N))
+        {
+            if (selectedObject == null)
+            {
+                RaycastHit hit = castRay();
+                if (hit.collider != null)
+                {
+                    if (!hit.collider.CompareTag("cube"))
+                        return;
+                    selectedObject = hit.collider.gameObject;
+                    ListeSelectioned.Add(selectedObject);
+                    Debug.Log("Selectioned");
+                }
+
+                selectedObject = null;
+            }
+        }
+        if (ListeSelectioned != null)
+        {
+            if (Input.GetKey(KeyCode.UpArrow))
+            {
+                Debug.Log("up");
+                Matrice.Matrice3x3 Mat = Matrice.Matrice3x3.CreateTranslation(new Vector3(0f,pasDep,0));
+                for (int i = 0; i < ListeSelectioned.Count; i++)
+                {
+                    Vector3 posGameObject = ListeSelectioned[i].transform.position;
+                    ListeSelectioned[i].transform.position = Mat*posGameObject;
+                }
+            }
+            if (Input.GetKey(KeyCode.DownArrow))
+            {
+                Matrice.Matrice3x3 Mat = Matrice.Matrice3x3.CreateTranslation(new Vector3(0f,-pasDep,0));
+                for (int i = 0; i < ListeSelectioned.Count; i++)
+                {
+                    Vector3 posGameObject = ListeSelectioned[i].transform.position;
+                    ListeSelectioned[i].transform.position = Mat*posGameObject;
+                }
+            }
+            if (Input.GetKey(KeyCode.LeftArrow))
+            {
+                Matrice.Matrice3x3 Mat = Matrice.Matrice3x3.CreateTranslation(new Vector3(-pasDep,0f,0));
+                for (int i = 0; i < ListeSelectioned.Count; i++)
+                {
+                    Vector3 posGameObject = ListeSelectioned[i].transform.position;
+                    ListeSelectioned[i].transform.position = Mat*posGameObject;
+                }
+            }
+            if (Input.GetKey(KeyCode.RightArrow))
+            {
+                Matrice.Matrice3x3 Mat = Matrice.Matrice3x3.CreateTranslation(new Vector3(pasDep,0f,0));
+                for (int i = 0; i < ListeSelectioned.Count; i++)
+                {
+                    Vector3 posGameObject = ListeSelectioned[i].transform.position;
+                    ListeSelectioned[i].transform.position = Mat*posGameObject;
+                }
+            }
+
+            if (Input.GetKey(KeyCode.C))
+            {
+                Quaternion rotation = Quaternion.Euler(0, 0, 10);
+                Matrix4x4 m = Matrix4x4.Rotate(rotation);
+                for (int i = 0; i < ListeSelectioned.Count; i++)
+                { 
+                    ListeSelectioned[i].transform.position = m.MultiplyVector(ListeSelectioned[i].transform.position);
+                        
+                }
+            }
+            //Rota Y
+            if (Input.GetKey(KeyCode.B))
+            {
+                Quaternion rotation = Quaternion.Euler(0, 10, 0);
+                Matrix4x4 m = Matrix4x4.Rotate(rotation);
+                for (int i = 0; i < ListeSelectioned.Count; i++)
+                { 
+                    ListeSelectioned[i].transform.position = m.MultiplyVector(ListeSelectioned[i].transform.position);
+                        
+                }
+            }
+            //rota X
+            if (Input.GetKey(KeyCode.V))
+            {
+                Quaternion rotation = Quaternion.Euler(10, 0, 0);
+                Matrix4x4 m = Matrix4x4.Rotate(rotation);
+                for (int i = 0; i < ListeSelectioned.Count; i++)
+                { 
+                    ListeSelectioned[i].transform.position = m.MultiplyVector(ListeSelectioned[i].transform.position);
+                        
+                }
+            }
+        }
     }
-    
+
     public void Draw()
     {
         // on dessine la courbe externe
@@ -121,13 +238,14 @@ public class Bezier : MonoBehaviour
             GameObject.Destroy(GameObject.Find("Courbe Exterieur"));
         }
         GameObject courbeExt = Instantiate(courbe);
-        Transform child;
         courbeExt.name = "Courbe Exterieur";
         for (int i = 0; i < GameobjectList.Count; i++)
         {
             GameobjectList[i].transform.SetParent(courbeExt.transform);
-            Relier(GameobjectList);
+            Relier(GameobjectList,Color.red);
         }
+        ListeCourbe.Add(GameobjectList);
+       
         //on dessine la bezier
         if (GameObject.Find("Courbe Bezier"))
         {
@@ -143,8 +261,11 @@ public class Bezier : MonoBehaviour
             pointBez.transform.SetParent(courbeBez.transform);
             BezierList.Add(pointBez);
         }
+        GameObject lastpointBez =Instantiate(pointBezier,GameobjectList[GameobjectList.Count-1].transform.position,Quaternion.identity);
+        lastpointBez.transform.SetParent(courbeBez.transform);
+        BezierList.Add(lastpointBez);
         if (GameObject.Find("Courbe Bezier")!= null)
-            Relier(BezierList);
+            Relier(BezierList,Color.magenta);
         
     }
     
@@ -153,14 +274,14 @@ public class Bezier : MonoBehaviour
     {
         //dessiner la deuxieme courbe
         GameObject courbeExt = Instantiate(courbe);
-        Transform child;
         courbeExt.name = "Courbe Exterieur 2";
         for (int i = 0; i < GameobjectList2.Count; i++)
         {
             GameobjectList2[i].transform.SetParent(courbeExt.transform);
-            Relier(GameobjectList2);
+            Relier(GameobjectList2,Color.blue);
         }
-        
+        ListeCourbe.Add(GameobjectList2);
+       
         // Dessiner la deuxieme Bezier
         if (GameObject.Find("Courbe Bezier 2"))
         {
@@ -177,8 +298,11 @@ public class Bezier : MonoBehaviour
             pointBez.transform.SetParent(courbeBez.transform);
             BezierList2.Add(pointBez);
         }
+        GameObject lastpointBez =Instantiate(pointBezier,GameobjectList2[GameobjectList2.Count-1].transform.position,Quaternion.identity);
+        lastpointBez.transform.SetParent(courbeBez.transform);
+        BezierList2.Add(lastpointBez);
         if (GameObject.Find("Courbe Bezier")!= null)
-            Relier(BezierList2);
+            Relier(BezierList2,Color.cyan);
         
     }
     
@@ -189,17 +313,33 @@ public class Bezier : MonoBehaviour
         Vector3 position;
         plane.Raycast(ray, out enter);
         position = ray.GetPoint(enter);
-        GameObject point =Instantiate(gameObject,position,Quaternion.identity);
-        lineExt.Add(point);
+        RaycastHit hit = castRay();
+        if (hit.collider != null)
+        {
+            if (hit.collider.CompareTag("cube"))
+            {
+                GameObject tmp;
+                tmp = hit.collider.gameObject;
+                PoidList poidlist =tmp.GetComponent<PoidList>();
+                poidlist.poid += 1;
+            }
+            else
+            {
+                GameObject point =Instantiate(gameObject,position,Quaternion.identity);  
+                lineExt.Add(point);
+            }
+        }
+        
+        
+        
     }
 
-    public void Relier(List<GameObject> list)
+    public void Relier(List<GameObject> list, Color color )
     {
         if (list.Count > 1)
         {
             for (int i = 0; i < list.Count - 1; i++)
             {
-                
                 if (!list[i].GetComponent<LineRenderer>())
                 {
                     Vector3 nextPoint;
@@ -220,9 +360,12 @@ public class Bezier : MonoBehaviour
                     _lineRenderer.startWidth = 0.1f;
                     _lineRenderer.endWidth = 0.1f;
                     _lineRenderer.positionCount = 2;
+                    _lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+                    _lineRenderer.startColor = color;
+                    _lineRenderer.endColor = color;
                     _lineRenderer.SetPosition(0, list[i].transform.position);
                     _lineRenderer.SetPosition(1,nextPoint);
-
+                    Debug.Log(list[i].transform.position);
                 }
                 else
                 {
@@ -239,7 +382,6 @@ public class Bezier : MonoBehaviour
                     {
                         nextPoint = list[i + 1].transform.position;
                     }
-
                     LineRenderer _lineRenderer = list[i].GetComponent<LineRenderer>();
                     _lineRenderer.SetPosition(0, list[i].transform.position);
                     _lineRenderer.SetPosition(1,nextPoint);
@@ -252,15 +394,26 @@ public class Bezier : MonoBehaviour
     // on calcul un point de la bezier
     public Vector3 CalculateBezier(float t, List<GameObject> CurrentLine)
     {
-        List<Vector3> bezierPoint = new List<Vector3>();
 
-        for (int level = CurrentLine.Count - 1; level >= 0; level--)
+        List<GameObject> CurrentLine2 = new List<GameObject>();
+
+        foreach (var ptscontrol in CurrentLine)
         {
-            if (level == CurrentLine.Count - 1)
+            for (int j = 0; j <= ptscontrol.GetComponent<PoidList>().poid; j++)
             {
-                for (int i = 0; i <= CurrentLine.Count - 1; i++)
+                CurrentLine2.Add(ptscontrol);
+            }
+        }
+        
+        List<Vector3> bezierPoint = new List<Vector3>();
+        
+        for (int level = CurrentLine2.Count - 1; level >= 0; level--)
+        {
+            if (level == CurrentLine2.Count - 1)
+            {
+                for (int i = 0; i <= CurrentLine2.Count - 1; i++)
                 {
-                    bezierPoint.Add(CurrentLine[i]. transform.position);
+                    bezierPoint.Add(CurrentLine2[i].transform.position);
                 }
 
                 continue;
@@ -270,6 +423,7 @@ public class Bezier : MonoBehaviour
             int index = lastIndex - levelIndex;
             for (int i = 0; i <= level; i++)
             {
+                
                 Vector3 Point = (1 - t) * bezierPoint[index] + t * bezierPoint[index + 1];
                 bezierPoint.Add(Point);
                 ++index;
@@ -324,34 +478,174 @@ public class Bezier : MonoBehaviour
 
     public void RaccordC0()
     {
-        raccordList = GameobjectList.Concat(GameobjectList2).ToList();
+        
+        GameObject tmp = GameobjectList[GameobjectList.Count-1];
+        List<GameObject> courbeR = new List<GameObject>();
+        courbeR.Add(tmp);
+        Instantiate(pointPrefab2, tmp.transform.position, Quaternion.identity);
+        for (int i = 0; i < GameobjectList2.Count; i++)
+        {
+            courbeR.Add(GameobjectList2[i]);
+            Debug.Log(i);
+        }
         
         GameObject courbeExt = Instantiate(courbe);
-        Transform child;
-        courbeExt.name = "Concat";
-        for (int i = 0; i < raccordList.Count; i++)
-        {
-            raccordList[i].transform.SetParent(courbeExt.transform);
-            Relier(raccordList);
-        }
         
-        // Dessiner la deuxieme Bezier
-        if (GameObject.Find("Concat Bezier"))
+        courbeExt.name = "Concat";
+        if (GameObject.Find("Courbe Exterieur 2"))
         {
-            GameObject.Destroy(GameObject.Find("Concat Bezier"));
+            GameObject.Destroy(GameObject.Find("Courbe Exterieur 2"));
+        }
+        for (int i = 0; i < courbeR.Count; i++)
+        {
+            courbeR[i].transform.SetParent(courbeExt.transform);
+            Relier(courbeR,Color.blue);
+        }
+        ListeCourbe.Add(courbeR);
+       Debug.Log("des");
+        // Dessiner la deuxieme Bezier
+        if (GameObject.Find("Courbe Bezier 2"))
+        {
+            GameObject.Destroy(GameObject.Find("Courbe Bezier 2"));
         }
         GameObject courbeBez = Instantiate(courbe);
-        courbeBez.name = "Concat Bezier"; 
-        raccordBezierList.Clear();
+        courbeBez.name = "Courbe Bezier 2"; 
+        BezierList2.Clear();
         for (float i = 0; i <= 1; i += pas )
         {
-            Vector3 position = CalculateBezier(i, raccordList);
+            ListeCourbe.Add(courbeR);
+            Vector3 position = CalculateBezier(i, courbeR);
             GameObject pointBez =Instantiate(pointBezier,position,Quaternion.identity);
             pointBez.transform.SetParent(courbeBez.transform);
-            raccordBezierList.Add(pointBez);
+            BezierList2.Add(pointBez);
         }
-        if (GameObject.Find("Concat Bezier")!= null)
-            Relier(raccordBezierList);
+        GameObject lastpointBez =Instantiate(pointBezier,GameobjectList2[GameobjectList2.Count-1].transform.position,Quaternion.identity);
+        lastpointBez.transform.SetParent(courbeBez.transform);
+        BezierList2.Add(lastpointBez);
+        
+        Debug.Log("avant relier bezier");
+        if (GameObject.Find("Courbe Bezier")!= null)
+            Relier(BezierList2,Color.cyan);
+        
+    }
+    
+    
+    public void RaccordC1()
+    {
+        
+        GameObject tmp = GameobjectList[GameobjectList.Count-1];
+        List<GameObject> courbeR = new List<GameObject>();
+        courbeR.Add(tmp);
+        Instantiate(pointPrefab2, tmp.transform.position, Quaternion.identity);
+        GameObject tmp2 = new GameObject();
+        tmp2.transform.position = 2 * GameobjectList[GameobjectList.Count - 1].transform.position -GameobjectList[GameobjectList.Count - 2].transform.position;
+        courbeR.Add(tmp2);
+        Instantiate(pointPrefab2, tmp2.transform.position, Quaternion.identity);
+        for (int i = 0; i < GameobjectList2.Count; i++)
+        {
+            courbeR.Add(GameobjectList2[i]);
+            Debug.Log(i);
+        }
+        
+        GameObject courbeExt = Instantiate(courbe);
+        
+        courbeExt.name = "Concat";
+        if (GameObject.Find("Courbe Exterieur 2"))
+        {
+            GameObject.Destroy(GameObject.Find("Courbe Exterieur 2"));
+        }
+        for (int i = 0; i < courbeR.Count; i++)
+        {
+            courbeR[i].transform.SetParent(courbeExt.transform);
+            Relier(courbeR,Color.blue);
+        }
+        ListeCourbe.Add(courbeR);
+        Debug.Log("des");
+        // Dessiner la deuxieme Bezier
+        if (GameObject.Find("Courbe Bezier 2"))
+        {
+            GameObject.Destroy(GameObject.Find("Courbe Bezier 2"));
+        }
+        GameObject courbeBez = Instantiate(courbe);
+        courbeBez.name = "Courbe Bezier 2"; 
+        BezierList2.Clear();
+        for (float i = 0; i <= 1; i += pas )
+        {
+            ListeCourbe.Add(courbeR);
+            Vector3 position = CalculateBezier(i, courbeR);
+            GameObject pointBez =Instantiate(pointBezier,position,Quaternion.identity);
+            pointBez.transform.SetParent(courbeBez.transform);
+            BezierList2.Add(pointBez);
+        }
+        GameObject lastpointBez =Instantiate(pointBezier,GameobjectList2[GameobjectList2.Count-1].transform.position,Quaternion.identity);
+        lastpointBez.transform.SetParent(courbeBez.transform);
+        BezierList2.Add(lastpointBez);
+        
+        Debug.Log("avant relier bezier");
+        if (GameObject.Find("Courbe Bezier")!= null)
+            Relier(BezierList2,Color.cyan);
+        
+    }
+    
+    public void RaccordC2()
+    {
+        
+        GameObject tmp = GameobjectList[GameobjectList.Count-1];
+        List<GameObject> courbeR = new List<GameObject>();
+        courbeR.Add(tmp);
+        Instantiate(pointPrefab2, tmp.transform.position, Quaternion.identity);
+        GameObject tmp2 = new GameObject();
+        tmp2.transform.position = 2 * GameobjectList[GameobjectList.Count - 1].transform.position -GameobjectList[GameobjectList.Count - 2].transform.position;
+        courbeR.Add(tmp2);
+        Instantiate(pointPrefab2, tmp2.transform.position, Quaternion.identity);
+        GameObject tmp3 = new GameObject();
+        tmp3.transform.position =GameobjectList[GameobjectList.Count-2].transform.position- (2*GameobjectList[GameobjectList.Count - 2].transform.position)+ 2*tmp.transform.position;
+        courbeR.Add(tmp3);
+        Instantiate(pointPrefab2, tmp3.transform.position, Quaternion.identity);
+        
+        for (int i = 0; i < GameobjectList2.Count; i++)
+        {
+            courbeR.Add(GameobjectList2[i]);
+           
+        }
+        
+        GameObject courbeExt = Instantiate(courbe);
+        
+        courbeExt.name = "Concat";
+        if (GameObject.Find("Courbe Exterieur 2"))
+        {
+            GameObject.Destroy(GameObject.Find("Courbe Exterieur 2"));
+        }
+        for (int i = 0; i < courbeR.Count; i++)
+        {
+            courbeR[i].transform.SetParent(courbeExt.transform);
+            Relier(courbeR,Color.blue);
+        }
+        ListeCourbe.Add(courbeR);
+        Debug.Log("des");
+        // Dessiner la deuxieme Bezier
+        if (GameObject.Find("Courbe Bezier 2"))
+        {
+            GameObject.Destroy(GameObject.Find("Courbe Bezier 2"));
+        }
+        GameObject courbeBez = Instantiate(courbe);
+        courbeBez.name = "Courbe Bezier 2"; 
+        BezierList2.Clear();
+        for (float i = 0; i <= 1; i += pas )
+        {
+            ListeCourbe.Add(courbeR);
+            Vector3 position = CalculateBezier(i, courbeR);
+            GameObject pointBez =Instantiate(pointBezier,position,Quaternion.identity);
+            pointBez.transform.SetParent(courbeBez.transform);
+            BezierList2.Add(pointBez);
+        }
+        GameObject lastpointBez =Instantiate(pointBezier,GameobjectList2[GameobjectList2.Count-1].transform.position,Quaternion.identity);
+        lastpointBez.transform.SetParent(courbeBez.transform);
+        BezierList2.Add(lastpointBez);
+        
+        Debug.Log("avant relier bezier");
+        if (GameObject.Find("Courbe Bezier")!= null)
+            Relier(BezierList2,Color.cyan);
         
     }
     
@@ -379,6 +673,8 @@ public class Bezier : MonoBehaviour
             {
                 if (liste[i] == pointActuel)
                     continue;
+                
+                //calcul des angles
                 float x1, x2, y1, y2;
                 x1 = pointActuel.transform.position.x - pointSuivant.transform.position.x;
                 x2 = pointActuel.transform.position.x - liste[i].transform.position.x;
@@ -416,6 +712,12 @@ public class Bezier : MonoBehaviour
     
     public void Enveloppe1()
     {
+        if (GameObject.Find("Enveloppe1"))
+        {
+            GameObject.Destroy(GameObject.Find("Enveloppe1"));
+            
+        } 
+       EnveloppeConvexe1.Clear();
        EnveloppeConvexe1= Jarvis(GameobjectList);
        
        GameObject courbeExt = Instantiate(courbe);
@@ -423,7 +725,7 @@ public class Bezier : MonoBehaviour
        for (int i = 0; i < EnveloppeConvexe1.Count; i++)
        {
            EnveloppeConvexe1[i].transform.SetParent(courbeExt.transform);
-           Relier(EnveloppeConvexe1);
+           Relier(EnveloppeConvexe1,Color.red);
        }
        
        if (GameObject.Find("Courbe Bezier Enveloppe"))
@@ -441,19 +743,25 @@ public class Bezier : MonoBehaviour
            BezierEnveloppeConvexe1.Add(pointBez);
        }
        if (GameObject.Find("Courbe Bezier Enveloppe")!= null)
-           Relier(BezierEnveloppeConvexe1);
+           Relier(BezierEnveloppeConvexe1,Color.magenta);
        
     }
     
     public void Enveloppe2()
     {
+        if (GameObject.Find("Enveloppe2"))
+        {
+            GameObject.Destroy(GameObject.Find("Enveloppe2"));
+            
+        } 
+       EnveloppeConvexe2.Clear();
        EnveloppeConvexe2 = Jarvis(GameobjectList2);
        GameObject courbeExt = Instantiate(courbe);
        courbeExt.name = "Enveloppe2";
        for (int i = 0; i < EnveloppeConvexe2.Count; i++)
        {
            EnveloppeConvexe2[i].transform.SetParent(courbeExt.transform);
-           Relier(EnveloppeConvexe2);
+           Relier(EnveloppeConvexe2,Color.blue);
        }
        
        if (GameObject.Find("Courbe Bezier Enveloppe2"))
@@ -471,7 +779,7 @@ public class Bezier : MonoBehaviour
            BezierEnveloppeConvexe2.Add(pointBez);
        }
        if (GameObject.Find("Courbe Bezier Enveloppe2")!= null)
-           Relier(BezierEnveloppeConvexe2);
+           Relier(BezierEnveloppeConvexe2,Color.cyan);
     }
 
     public void testIntersection()
@@ -479,15 +787,15 @@ public class Bezier : MonoBehaviour
         Vector3 posIntersection = Vector3.zero;
         
         
-        for (int i = 0; i < EnveloppeConvexe1.Count-1; i++)
+        for (int i = 0; i < BezierEnveloppeConvexe1.Count-1; i++)
         {
-            GameObject PointActuelPoly1 = EnveloppeConvexe1[i];
-            GameObject PointSuivantPoly1 = EnveloppeConvexe1[i+1];
+            GameObject PointActuelPoly1 = BezierEnveloppeConvexe1[i];
+            GameObject PointSuivantPoly1 = BezierEnveloppeConvexe1[i+1];
 
-            for (int j = 0; j < EnveloppeConvexe2.Count-1; j++)
+            for (int j = 0; j < BezierEnveloppeConvexe2.Count-1; j++)
             {
                
-                var resVal = Intersection(PointActuelPoly1, PointSuivantPoly1, EnveloppeConvexe2[j], EnveloppeConvexe2[j + 1], posIntersection);
+                var resVal = Intersection(PointActuelPoly1, PointSuivantPoly1, BezierEnveloppeConvexe2[j], BezierEnveloppeConvexe2[j + 1], posIntersection);
                 if (resVal.Item1 == true)
                 {
                     Debug.Log("INTERSECTION EN : " + resVal.Item2);
@@ -497,8 +805,7 @@ public class Bezier : MonoBehaviour
             
         }
     }
-
-
+    
     public (bool ,Vector3) Intersection(GameObject Point1Poly1,GameObject Point2Poly1,GameObject Point1Poly2,GameObject Point2Poly2 ,Vector3 posIntersection)
     {
         float s1_x, s1_y, s2_x, s2_y;
