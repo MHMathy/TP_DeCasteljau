@@ -20,12 +20,11 @@ public class Bezier : MonoBehaviour
 {
     // When added to an object, draws colored rays from the
     // transform position.
-    public int lineCount = 100;
-    public float radius = 3.0f;
+    
     public Camera camera;
     public float pas;
     private Plane plane;
-    static Material lineMaterial;
+    
 
 
     private List<GameObject> GameobjectList = new List<GameObject>();
