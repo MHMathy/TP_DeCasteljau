@@ -27,6 +27,8 @@ public class ExtrusionBezier : MonoBehaviour
     public GameObject courbe;
     private GameObject selectedObject = null;
 
+    public Material mat;
+
     public Text pasValue;
     private Slider slider;
     public Text scaleValue;
@@ -91,8 +93,6 @@ public class ExtrusionBezier : MonoBehaviour
                 selectedObject = null;
             }
         }
-
-
     }
 
     private void LierExtrude(List<GameObject> list1, List<GameObject> list2, Color color)
@@ -144,7 +144,6 @@ public class ExtrusionBezier : MonoBehaviour
         }
         Debug.Log("fin lier");
     }
-
 
     // Dessiner 1 point
     private void DessinerPoints(List<GameObject> lineExt, GameObject gameObject)
@@ -310,8 +309,6 @@ public class ExtrusionBezier : MonoBehaviour
             Relier(BezierList, Color.magenta);
     }
 
-
-
     public void Extrude1()
     {
         if (ListeSelectioned != null)
@@ -336,11 +333,41 @@ public class ExtrusionBezier : MonoBehaviour
 
             Relier(GameobjectList2, Color.blue);
             LierExtrude(BezierList, GameobjectList2, Color.green);
-            Debug.Log(GameobjectList2.Count);
-            Debug.Log(BezierList.Count);
+
+            // afficher face de l'extrusion
+            for (int l = 0; l < BezierList.Count - 2; l++)
+            {
+                float w = 5;
+                float h = 15;
+
+                GameObject face = Instantiate(new GameObject(), BezierList[l].transform.position, Quaternion.identity);
+                MeshFilter mf = face.AddComponent(typeof(MeshFilter)) as MeshFilter;
+                MeshRenderer mr = face.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
+
+                Mesh m = new Mesh();
+                m.triangles = new int[] { 0, 1, 2, 0, 2, 3 };
+
+                m.vertices = new Vector3[]{
+                    new Vector3(0f, 0f, 0f),
+                    new Vector3(w, 0f, 0f),
+                    new Vector3(w, h, 0f),
+                    new Vector3(0, h, 0)
+                };
+
+                m.uv = new Vector2[] {
+                    new Vector2(1f, 1f),
+                    new Vector2(1f, 0f),
+                    new Vector2(0f, 1f),
+                    new Vector2(0f, 0f)
+                };
+
+                mf.mesh = m;
+                m.RecalculateBounds();
+                m.RecalculateNormals();
+                mr.material = mat;
+            }
         }
     }
-
 
     public void ExtrudeRevolution()
     {

@@ -858,6 +858,7 @@ MonoBehaviour:
   pointPrefab: {fileID: 593747852200763459, guid: 72019e8f54d23094984ee3075c2ca016, type: 3}
   pointBezier: {fileID: 5586016997274396152, guid: cde1cab9323866e469629a47ee1e27eb, type: 3}
   courbe: {fileID: 5463878432820487022, guid: 963853334e549674db9b1636bf0ef5bc, type: 3}
+  mat: {fileID: 2100000, guid: f37b129c88abbf64d962136153671d5f, type: 2}
   pasValue: {fileID: 2146598924}
   scaleValue: {fileID: 1207617342}
   sliderScale: {fileID: 209618694}
