@@ -7,13 +7,14 @@ using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 using Matrice3 = Matrice.Matrice3x3;
 using UnityEngine.UI;
+
 public class ExtrusionBezier : MonoBehaviour
 {
     
     public Camera camera;
     public float pas;
     private int size;
-    private float scale = 0.5f;
+    private float scale = 0f;
     private Plane plane;
     public Canvas ui;
     
@@ -346,34 +347,6 @@ public class ExtrusionBezier : MonoBehaviour
     }
     
     
-    public void DupliqueCourbe(List<GameObject> env , List<GameObject> bez, String nameBez)
-    {
-        //on dessine la bezier
-        if (GameObject.Find(nameBez))
-        {
-            GameObject.Destroy(GameObject.Find(nameBez));
-        } 
-        GameObject courbeBez = Instantiate(courbe);
-        courbeBez.name = nameBez; 
-        bez.Clear();
-        for (float i = 0; i <= 1; i += pas )
-        {
-            if (env.Count < 2)
-            {
-                return;
-            }
-            Vector3 position = CalculateBezier(i, env);
-            GameObject pointBez =Instantiate(pointBezier,position,Quaternion.identity);
-            pointBez.transform.SetParent(courbeBez.transform);
-            bez.Add(pointBez);
-        }
-        GameObject lastpointBez =Instantiate(pointBezier,GameobjectList[GameobjectList.Count-1].transform.position,Quaternion.identity);
-        lastpointBez.transform.SetParent(courbeBez.transform);
-        bez.Add(lastpointBez);
-        if (GameObject.Find(nameBez)!= null)
-            Relier(bez,Color.magenta);
-        
-    }
 
     public void Extrude1()
     {
@@ -404,4 +377,62 @@ public class ExtrusionBezier : MonoBehaviour
             Debug.Log(BezierList.Count);
         }
     }
+    
+    
+    public void ExtrudeRevolution()
+    {
+        if (ListeSelectioned != null)
+        {
+            for (int j = 0; j <= 360; j+=45)
+                {
+                    GameObject Extrude = Instantiate(ListeSelectioned[0], ListeSelectioned[0].transform.position,
+                        Quaternion.identity);
+                    Extrude.name = "extrudeRevolution" +j;
+                
+                    for (int i = 0; i < Extrude.transform.childCount ; i++)
+                    {
+                        Quaternion rotation = Quaternion.Euler( (float)Math.Cos(j), 1,  (float)Math.Sin(j));
+                        Matrix4x4 m = Matrix4x4.Rotate(rotation);
+                        Extrude.transform.GetChild(i).position = m.MultiplyVector(Extrude.transform.GetChild(i).position);
+                        Vector3 posGameObject = Extrude.transform.GetChild(i).position;
+                        Extrude.transform.GetChild(i).position = m.MultiplyPoint3x4(posGameObject);
+                        GameobjectList2.Add(Extrude.transform.GetChild(i).gameObject); 
+                    }
+                
+                    Relier(GameobjectList2,Color.blue);
+                    LierExtrude(BezierList,GameobjectList2,Color.green);
+                }
+        }
+    }
+    
+    public void ExtrudeGeneralise()
+    {
+        if (ListeSelectioned != null)
+        {
+            if (GameObject.Find("extrude"))
+            {
+                Destroy(GameObject.Find("extrude"));
+            }
+            GameObject Extrude = Instantiate(ListeSelectioned[0], ListeSelectioned[0].transform.position,
+                Quaternion.identity);
+            Extrude.name = "extrude";
+                
+            for (int i = 0; i < Extrude.transform.childCount ; i++)
+            {
+                Matrix4x4 m = Matrix4x4.Translate(new Vector3(0f, 0, size));
+                Vector3 posGameObject = Extrude.transform.GetChild(i).position;
+                Extrude.transform.GetChild(i).position = m.MultiplyPoint3x4(posGameObject);
+                    
+                Matrix4x4 scaleMatrix = Matrix4x4.Scale(new Vector3(scale,scale,scale));
+                Extrude.transform.GetChild(i).position += scaleMatrix.MultiplyPoint3x4(posGameObject);
+                GameobjectList2.Add(Extrude.transform.GetChild(i).gameObject);
+            }
+                
+            Relier(GameobjectList2,Color.blue);
+            LierExtrude(BezierList,GameobjectList2,Color.green);
+            Debug.Log(GameobjectList2.Count);
+            Debug.Log(BezierList.Count);
+        }
+    }
+    
 }
