@@ -562,7 +562,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   camera: {fileID: 963194227}
-  pas: 0.2
+  pas: 0.002
   ui: {fileID: 1634483790}
   pointPrefab: {fileID: 593747852200763459, guid: 72019e8f54d23094984ee3075c2ca016, type: 3}
   pointBezier: {fileID: 5586016997274396152, guid: cde1cab9323866e469629a47ee1e27eb, type: 3}
@@ -1110,10 +1110,10 @@ MonoBehaviour:
   m_FillRect: {fileID: 790836336}
   m_HandleRect: {fileID: 233558756}
   m_Direction: 0
-  m_MinValue: 0
+  m_MinValue: -10
   m_MaxValue: 10
   m_WholeNumbers: 1
-  m_Value: 3
+  m_Value: -0
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []

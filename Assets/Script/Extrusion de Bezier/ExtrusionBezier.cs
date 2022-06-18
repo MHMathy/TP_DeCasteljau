@@ -105,36 +105,7 @@ public class ExtrusionBezier : MonoBehaviour
                 selectedObject = null;
             }
         }
-
-        if (ListeSelectioned != null)
-        {
-            if (Input.GetKeyDown(KeyCode.UpArrow))
-            {
-                if (GameObject.Find("extrude"))
-                {
-                    Destroy(GameObject.Find("extrude"));
-                }
-                GameObject Extrude = Instantiate(ListeSelectioned[0], ListeSelectioned[0].transform.position,
-                    Quaternion.identity);
-                Extrude.name = "extrude";
-                
-                for (int i = 0; i < Extrude.transform.childCount; i++)
-                {
-                    Matrix4x4 m = Matrix4x4.Translate(new Vector3(0f, 0, size));
-                    Vector3 posGameObject = Extrude.transform.GetChild(i).position;
-                    Extrude.transform.GetChild(i).position = m.MultiplyPoint3x4(posGameObject);
-                    
-                    Matrix4x4 scaleMatrix = Matrix4x4.Scale(new Vector3(scale,scale,scale));
-                    Extrude.transform.GetChild(i).position += scaleMatrix.MultiplyPoint3x4(posGameObject);
-                    GameobjectList2.Add(Extrude.transform.GetChild(i).gameObject);
-                }
-                
-                Relier(GameobjectList2,Color.blue);
-                LierExtrude(BezierList,GameobjectList2,Color.green);
-                Debug.Log(GameobjectList2.Count);
-                Debug.Log(BezierList.Count);
-            }
-        }
+        
 
     }
 
@@ -195,6 +166,7 @@ public class ExtrusionBezier : MonoBehaviour
                 }
             }
         }
+        Debug.Log("fin lier");
     }
 
 
@@ -405,15 +377,31 @@ public class ExtrusionBezier : MonoBehaviour
 
     public void Extrude1()
     {
-        if (selectedObject == null)
-            return;
-        for (int i = 0; i < GameobjectList.Count; i++)
+        if (ListeSelectioned != null)
         {
-            GameobjectList2[i] = GameobjectList[i];
+            if (GameObject.Find("extrude"))
+            {
+                Destroy(GameObject.Find("extrude"));
+            }
+            GameObject Extrude = Instantiate(ListeSelectioned[0], ListeSelectioned[0].transform.position,
+                Quaternion.identity);
+            Extrude.name = "extrude";
+                
+            for (int i = 0; i < Extrude.transform.childCount ; i++)
+            {
+                Matrix4x4 m = Matrix4x4.Translate(new Vector3(0f, 0, size));
+                Vector3 posGameObject = Extrude.transform.GetChild(i).position;
+                Extrude.transform.GetChild(i).position = m.MultiplyPoint3x4(posGameObject);
+                    
+                Matrix4x4 scaleMatrix = Matrix4x4.Scale(new Vector3(scale,scale,scale));
+                Extrude.transform.GetChild(i).position += scaleMatrix.MultiplyPoint3x4(posGameObject);
+                GameobjectList2.Add(Extrude.transform.GetChild(i).gameObject);
+            }
+                
+            Relier(GameobjectList2,Color.blue);
+            LierExtrude(BezierList,GameobjectList2,Color.green);
+            Debug.Log(GameobjectList2.Count);
+            Debug.Log(BezierList.Count);
         }
-    
-        DupliqueCourbe(GameobjectList2,BezierList2,"ExtrudeBez");
-    
-    
     }
 }
