@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 2108955306058650918}
   - component: {fileID: 4325128134824004631}
   m_Layer: 0
-  m_Name: pointBezier
+  m_Name: PointBezier
   m_TagString: BezPoint
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

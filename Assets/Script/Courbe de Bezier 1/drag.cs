@@ -1,13 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class drag : MonoBehaviour
+public class Drag : MonoBehaviour
 {
     private GameObject selectedObject;
-    // Start is called before the first frame update
-    
-    // Update is called once per frame
+
     void Update()
     {
         if (Input.GetMouseButtonDown(0))
@@ -18,10 +14,7 @@ public class drag : MonoBehaviour
                 if (hit.collider != null)
                 {
                     if (!hit.collider.CompareTag("cube"))
-                    {
                         return;
-                    }
-
                     selectedObject = hit.collider.gameObject;
                     Cursor.visible = false;
                 }
@@ -31,8 +24,7 @@ public class drag : MonoBehaviour
                 Vector3 position = new Vector3(Input.mousePosition.x, Input.mousePosition.y,
                     Camera.main.WorldToScreenPoint(selectedObject.transform.position).z);
                 Vector3 worldPosition = Camera.main.ScreenToWorldPoint(position);
-                selectedObject.transform.position = new Vector3(worldPosition.x, worldPosition.y , worldPosition.z);
-
+                selectedObject.transform.position = new Vector3(worldPosition.x, worldPosition.y, worldPosition.z);
                 selectedObject = null;
                 Cursor.visible = true;
             }
@@ -42,7 +34,7 @@ public class drag : MonoBehaviour
             Vector3 position = new Vector3(Input.mousePosition.x, Input.mousePosition.y,
                 Camera.main.WorldToScreenPoint(selectedObject.transform.position).z);
             Vector3 worldPosition = Camera.main.ScreenToWorldPoint(position);
-            selectedObject.transform.position = new Vector3(worldPosition.x, worldPosition.y +.25f, worldPosition.z);
+            selectedObject.transform.position = new Vector3(worldPosition.x, worldPosition.y + .25f, worldPosition.z);
         }
     }
 
@@ -56,5 +48,4 @@ public class drag : MonoBehaviour
         Physics.Raycast(worldMousPosNear, worldMousPosfar - worldMousPosNear, out hit);
         return hit;
     }
-    
 }
