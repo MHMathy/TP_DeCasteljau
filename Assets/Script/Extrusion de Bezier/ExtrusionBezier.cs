@@ -280,7 +280,6 @@ public class ExtrusionBezier : MonoBehaviour
             Relier(GameobjectList, Color.red);
         }
 
-
         //on dessine la bezier
         if (GameObject.Find("Courbe Bezier"))
             GameObject.Destroy(GameObject.Find("Courbe Bezier"));
@@ -316,8 +315,7 @@ public class ExtrusionBezier : MonoBehaviour
             if (GameObject.Find("extrude"))
                 Destroy(GameObject.Find("extrude"));
 
-            GameObject Extrude = Instantiate(ListeSelectioned[0], ListeSelectioned[0].transform.position,
-                Quaternion.identity);
+            GameObject Extrude = Instantiate(ListeSelectioned[0], ListeSelectioned[0].transform.position, Quaternion.identity);
             Extrude.name = "extrude";
 
             for (int i = 0; i < Extrude.transform.childCount; i++)
@@ -337,36 +335,43 @@ public class ExtrusionBezier : MonoBehaviour
             // afficher face de l'extrusion
             for (int l = 0; l < BezierList.Count - 2; l++)
             {
-                float w = 5;
-                float h = 15;
-
-                GameObject face = Instantiate(new GameObject(), BezierList[l].transform.position, Quaternion.identity);
+                GameObject face = Instantiate(new GameObject(), BezierList[l].transform.position, new Quaternion(0f, 0f, 0f, 0f));
                 MeshFilter mf = face.AddComponent(typeof(MeshFilter)) as MeshFilter;
                 MeshRenderer mr = face.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
 
                 Mesh m = new Mesh();
-                m.triangles = new int[] { 0, 1, 2, 0, 2, 3 };
+
+                float P2X = BezierList[l + 1].transform.position.x - BezierList[l].transform.position.x;
+                float P2Y = BezierList[l + 1].transform.position.y - BezierList[l].transform.position.y;
+
+                float P3X = GameobjectList2[l + 1].transform.position.x - BezierList[l].transform.position.x;
+                float P3Y = GameobjectList2[l + 1].transform.position.y - BezierList[l].transform.position.y;
+                float P3Z = GameobjectList2[l + 1].transform.position.z - BezierList[l].transform.position.z;
+
+                float P4X = GameobjectList2[l].transform.position.x - BezierList[l].transform.position.x;
+                float P4Y = GameobjectList2[l].transform.position.y - BezierList[l].transform.position.y;
+                float P4Z = GameobjectList2[l].transform.position.z - BezierList[l].transform.position.z;
 
                 m.vertices = new Vector3[]{
                     new Vector3(0f, 0f, 0f),
-                    new Vector3(w, 0f, 0f),
-                    new Vector3(w, h, 0f),
-                    new Vector3(0, h, 0)
+                    new Vector3(P2X, P2Y, 0f),
+                    new Vector3(P3X, P3Y, P3Z),
+                    new Vector3(P4X, P4Y, P4Z)
                 };
 
                 m.uv = new Vector2[] {
-                    new Vector2(1f, 1f),
-                    new Vector2(1f, 0f),
-                    new Vector2(0f, 1f),
-                    new Vector2(0f, 0f)
+                    new Vector2 (0, 0),
+                    new Vector2 (0, 1),
+                    new Vector2(1, 1),
+                    new Vector2 (1, 0)
                 };
 
+                m.triangles = new int[] { 0, 1, 2, 0, 2, 3 };
                 mf.mesh = m;
-                m.RecalculateBounds();
-                m.RecalculateNormals();
                 mr.material = mat;
             }
         }
+        else Debug.Log("selectionner point");
     }
 
     public void ExtrudeRevolution()
@@ -419,8 +424,6 @@ public class ExtrusionBezier : MonoBehaviour
 
             Relier(GameobjectList2, Color.blue);
             LierExtrude(BezierList, GameobjectList2, Color.green);
-            Debug.Log(GameobjectList2.Count);
-            Debug.Log(BezierList.Count);
         }
     }
 }
