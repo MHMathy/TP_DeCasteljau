@@ -8,25 +8,31 @@ using UnityEngine.UI;
 
 public class ExtrusionBezier : MonoBehaviour
 {
+
     public Camera cam;
     public float pas;
     private int size;
     private float scale = 0f;
     private Plane plane;
     public Canvas ui;
+    private Vector3 centreBezier = new Vector3();
 
     //liste des points des courbes 
     private List<GameObject> GameobjectList = new List<GameObject>();
     private List<GameObject> BezierList = new List<GameObject>();
-    private List<GameObject> GameobjectList2 = new List<GameObject>();
-    private List<GameObject> BezierList2 = new List<GameObject>();
+    private List<GameObject> CourbeExtrude1 = new List<GameObject>();
+    private List<GameObject> CourbeExtrudePrec = new List<GameObject>();
     private List<GameObject> ListeSelectioned = new List<GameObject>();
-
+    private List<GameObject> ListeNull = new List<GameObject>();
+    private List<List<GameObject>> ListeExtrude = new List<List<GameObject>>();
+    
     public GameObject pointPrefab;
-    public GameObject pointBezier;
+    public GameObject pointBezierPrefab;
     public GameObject courbe;
+    public GameObject pivotPrefab;
     private GameObject selectedObject = null;
-
+    private GameObject currentPivot = null;
+    
     public Material mat;
 
     public Text pasValue;
@@ -62,19 +68,21 @@ public class ExtrusionBezier : MonoBehaviour
         //permet de creer un point 
         if (Input.GetKeyDown(KeyCode.Z))
             DessinerPoints(GameobjectList, pointPrefab);
-
-        //Changer vue Camera
-        if (Input.GetKeyDown(KeyCode.T))
+        
+        //permet de creer un point 
+        if (Input.GetKeyDown(KeyCode.E))
         {
-            cam.transform.position = new Vector3(0, 14, 0);
-            cam.transform.Rotate(90, 0, 0);
+            if (GameObject.Find("pivot"))
+            {
+                Destroy(GameObject.Find("pivot"));
+            }
+            DessinerPoints(ListeNull, pivotPrefab);
+            currentPivot = GameObject.Find("pivot(Clone)");
+            currentPivot.name = "pivot";
+            
+                
         }
-
-        if (Input.GetKeyDown(KeyCode.Y))
-        {
-            cam.transform.position = new Vector3(0, 0, -15);
-            cam.transform.Rotate(-90, 0, 0);
-        }
+            
 
         // Selectioner un point et l'ajouter a la liste des point selectioné
         if (Input.GetMouseButtonDown(0))
@@ -136,6 +144,8 @@ public class ExtrusionBezier : MonoBehaviour
 
                     LineRenderer lineRenderer = list2[i].GetComponent<LineRenderer>();
                     lineRenderer.positionCount = 3;
+                    lineRenderer.startColor = color;
+                    lineRenderer.endColor = color;
                     lineRenderer.SetPosition(0, nextPoint);
                     lineRenderer.SetPosition(1, list2[i].transform.position);
                     lineRenderer.SetPosition(2, list1[i].transform.position);
@@ -295,15 +305,15 @@ public class ExtrusionBezier : MonoBehaviour
                 return;
 
             Vector3 position = CalculateBezier(i, GameobjectList);
-            GameObject pointBez = Instantiate(pointBezier, position, Quaternion.identity);
+            GameObject pointBez = Instantiate(pointBezierPrefab, position, Quaternion.identity);
             pointBez.transform.SetParent(courbeBez.transform);
             BezierList.Add(pointBez);
         }
 
-        GameObject lastpointBez = Instantiate(pointBezier, GameobjectList[GameobjectList.Count - 1].transform.position, Quaternion.identity);
+        GameObject lastpointBez = Instantiate(pointBezierPrefab, GameobjectList[GameobjectList.Count - 1].transform.position, Quaternion.identity);
         lastpointBez.transform.SetParent(courbeBez.transform);
         BezierList.Add(lastpointBez);
-
+        centreBezier = CalculcentreBezier(BezierList);
         if (GameObject.Find("Courbe Bezier") != null)
             Relier(BezierList, Color.magenta);
     }
@@ -326,11 +336,11 @@ public class ExtrusionBezier : MonoBehaviour
 
                 Matrix4x4 scaleMatrix = Matrix4x4.Scale(new Vector3(scale, scale, scale));
                 Extrude.transform.GetChild(i).position += scaleMatrix.MultiplyPoint3x4(posGameObject);
-                GameobjectList2.Add(Extrude.transform.GetChild(i).gameObject);
+                CourbeExtrude1.Add(Extrude.transform.GetChild(i).gameObject);
             }
 
-            Relier(GameobjectList2, Color.blue);
-            LierExtrude(BezierList, GameobjectList2, Color.green);
+            Relier(CourbeExtrude1, Color.blue);
+            LierExtrude(BezierList, CourbeExtrude1, Color.green);
 
             // afficher face de l'extrusion
             for (int l = 0; l < BezierList.Count - 2; l++)
@@ -344,13 +354,13 @@ public class ExtrusionBezier : MonoBehaviour
                 float P2X = BezierList[l + 1].transform.position.x - BezierList[l].transform.position.x;
                 float P2Y = BezierList[l + 1].transform.position.y - BezierList[l].transform.position.y;
 
-                float P3X = GameobjectList2[l + 1].transform.position.x - BezierList[l].transform.position.x;
-                float P3Y = GameobjectList2[l + 1].transform.position.y - BezierList[l].transform.position.y;
-                float P3Z = GameobjectList2[l + 1].transform.position.z - BezierList[l].transform.position.z;
+                float P3X = CourbeExtrude1[l + 1].transform.position.x - BezierList[l].transform.position.x;
+                float P3Y = CourbeExtrude1[l + 1].transform.position.y - BezierList[l].transform.position.y;
+                float P3Z = CourbeExtrude1[l + 1].transform.position.z - BezierList[l].transform.position.z;
 
-                float P4X = GameobjectList2[l].transform.position.x - BezierList[l].transform.position.x;
-                float P4Y = GameobjectList2[l].transform.position.y - BezierList[l].transform.position.y;
-                float P4Z = GameobjectList2[l].transform.position.z - BezierList[l].transform.position.z;
+                float P4X = CourbeExtrude1[l].transform.position.x - BezierList[l].transform.position.x;
+                float P4Y = CourbeExtrude1[l].transform.position.y - BezierList[l].transform.position.y;
+                float P4Z = CourbeExtrude1[l].transform.position.z - BezierList[l].transform.position.z;
 
                 m.vertices = new Vector3[]{
                     new Vector3(0f, 0f, 0f),
@@ -374,29 +384,66 @@ public class ExtrusionBezier : MonoBehaviour
         else Debug.Log("selectionner point");
     }
 
+    public Vector3 CalculcentreBezier(List<GameObject> listeGo)
+    {
+        Vector3 res = new Vector3();
+
+        for (int i = 0; i < listeGo.Count; i++)
+        {
+            res.x += listeGo[i].transform.position.x;
+            res.y += listeGo[i].transform.position.y;
+            res.z += listeGo[i].transform.position.z;
+            
+        }
+
+        res = res / listeGo.Count;
+        return res;
+    }
+    
     public void ExtrudeRevolution()
     {
-        if (ListeSelectioned != null)
+        if (ListeSelectioned != null && currentPivot != null)
         {
-            for (int j = 0; j <= 360; j += 45)
+            var distancePivot = Vector3.Distance(centreBezier , currentPivot.transform.position);
+            
+            for (int j = 20; j < 360; j += 20)
             {
+                var sinTheta = Mathf.Sin(j * Mathf.Deg2Rad);
+                var cosTheta = Mathf.Cos(j * Mathf.Deg2Rad);
+                
                 GameObject Extrude = Instantiate(ListeSelectioned[0], ListeSelectioned[0].transform.position,
-                    Quaternion.identity);
+                    Quaternion.identity); 
                 Extrude.name = "extrudeRevolution" + j;
-
                 for (int i = 0; i < Extrude.transform.childCount; i++)
                 {
-                    Quaternion rotation = Quaternion.Euler((float)Math.Cos(j), 1, (float)Math.Sin(j));
-                    Matrix4x4 m = Matrix4x4.Rotate(rotation);
-                    Extrude.transform.GetChild(i).position = m.MultiplyVector(Extrude.transform.GetChild(i).position);
-                    Vector3 posGameObject = Extrude.transform.GetChild(i).position;
-                    Extrude.transform.GetChild(i).position = m.MultiplyPoint3x4(posGameObject);
-                    GameobjectList2.Add(Extrude.transform.GetChild(i).gameObject);
+                    Vector3 pos = new Vector3();
+                    pos.x = Extrude.transform.GetChild(i).position.x * cosTheta+Extrude.transform.GetChild(i).position.z * sinTheta ;
+                    pos.y = Extrude.transform.GetChild(i).position.y;
+                    pos.z = Extrude.transform.GetChild(i).position.z * cosTheta - Extrude.transform.GetChild(i).position.x * sinTheta + currentPivot.transform.position.z;
+                    Extrude.transform.GetChild(i).position = pos;
+                    CourbeExtrude1.Add(Extrude.transform.GetChild(i).gameObject);
+                } 
+                
+                ListeExtrude.Add(CourbeExtrude1);
+                Debug.Log(CourbeExtrude1.Count);
+                Relier(CourbeExtrude1, Color.blue);
+                
+                Debug.Log(CourbeExtrude1.Count + " et " + CourbeExtrudePrec.Count);
+                LierExtrude(CourbeExtrudePrec, CourbeExtrude1, Color.red);
+                CourbeExtrudePrec.Clear();
+                foreach (var point in CourbeExtrude1)
+                {
+                    CourbeExtrudePrec.Add(point);
                 }
-
-                Relier(GameobjectList2, Color.blue);
-                LierExtrude(BezierList, GameobjectList2, Color.green);
+                CourbeExtrude1.Clear();
             }
+            LierExtrude(CourbeExtrudePrec, BezierList, Color.red);
+            List<GameObject> l = new List<GameObject>();
+            for (int i = 0; i < ListeExtrude[0].Count; i++)
+            {
+                l.Add(ListeExtrude[0][i]);
+            }
+            LierExtrude(BezierList, l, Color.red);
         }
     }
 
@@ -419,11 +466,11 @@ public class ExtrusionBezier : MonoBehaviour
 
                 Matrix4x4 scaleMatrix = Matrix4x4.Scale(new Vector3(scale, scale, scale));
                 Extrude.transform.GetChild(i).position += scaleMatrix.MultiplyPoint3x4(posGameObject);
-                GameobjectList2.Add(Extrude.transform.GetChild(i).gameObject);
+                CourbeExtrude1.Add(Extrude.transform.GetChild(i).gameObject);
             }
 
-            Relier(GameobjectList2, Color.blue);
-            LierExtrude(BezierList, GameobjectList2, Color.green);
+            Relier(CourbeExtrude1, Color.blue);
+            LierExtrude(BezierList, CourbeExtrude1, Color.green);
         }
     }
 }
