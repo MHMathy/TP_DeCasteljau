@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 7278492478007742359}
   m_Layer: 6
   m_Name: Point 2
-  m_TagString: cube
+  m_TagString: Cube2
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

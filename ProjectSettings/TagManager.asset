@@ -6,6 +6,7 @@ TagManager:
   tags:
   - cube
   - BezPoint
+  - Cube2
   layers:
   - Default
   - TransparentFX

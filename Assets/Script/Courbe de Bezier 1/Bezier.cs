@@ -270,7 +270,7 @@ public class Bezier : MonoBehaviour
         GameObject lastpointBez = Instantiate(pointBezier, GameobjectList2[GameobjectList2.Count - 1].transform.position, Quaternion.identity);
         lastpointBez.transform.SetParent(courbeBez.transform);
         BezierList2.Add(lastpointBez);
-        if (GameObject.Find("Courbe Bezier") != null)
+        if (GameObject.Find("Courbe Bezier2") != null)
             Relier(BezierList2, Color.cyan);
 
     }
