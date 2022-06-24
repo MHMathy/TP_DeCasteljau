@@ -12,8 +12,9 @@ public class ExtrusionBezier : MonoBehaviour
 
     public Camera cam;
     public float pas;
+    private float pasCourbe = 0.08f;
     private int size;
-    private float scale = 0f;
+    private float scale = 1f;
     private Plane plane;
     public Canvas ui;
     private Vector3 centreBezier = new Vector3();
@@ -39,10 +40,12 @@ public class ExtrusionBezier : MonoBehaviour
 
     public Material mat;
 
-    public Text pasValue;
+    public Text distanceValue;
     private Slider slider;
     public Text scaleValue;
     public Slider sliderScale;
+    public Text pasValue;
+    public Slider sliderpas;
     private MoveCam _MoveCam;
     private bool Ismoving = false;
 
@@ -50,7 +53,7 @@ public class ExtrusionBezier : MonoBehaviour
     {
         plane = new Plane(new Vector3(0, 0, -1), 0);
         slider = ui.GetComponentInChildren<Slider>();
-        pasValue.text = size.ToString();
+        distanceValue.text = size.ToString();
         slider.value = size;
         scaleValue.text = scale.ToString();
         sliderScale.value = (float)scale;
@@ -69,10 +72,10 @@ public class ExtrusionBezier : MonoBehaviour
         }
         
         size = (int)slider.value;
-        pasValue.text = "Distance : " + slider.value.ToString();
+        distanceValue.text = "Distance : " + slider.value.ToString();
         scale = sliderScale.value;
         scaleValue.text = "Scale : " + sliderScale.value.ToString();
-
+        
         //Vider la liste des points selectionés 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
@@ -429,6 +432,8 @@ public class ExtrusionBezier : MonoBehaviour
         
         if (GameObject.Find("Courbe bezier Pour generaliser") != null)
             Relier(CourbeBezierGeneralise, Color.green);
+        
+        Debug.Log(CourbeBezierGeneralise.Count);
     }
     
 
@@ -444,8 +449,10 @@ public class ExtrusionBezier : MonoBehaviour
 
             for (int i = 0; i < Extrude.transform.childCount; i++)
             {
-                Matrix4x4 scaleMatrix = Matrix4x4.Scale(new Vector3(scale, scale, scale));
-                Extrude.transform.position += scaleMatrix.MultiplyPoint3x4(Extrude.transform.GetChild(i).position);
+               
+               var transformPosition = Extrude.transform.GetChild(i).transform.position;
+               transformPosition = scalePoint(transformPosition, scale);
+               Extrude.transform.GetChild(i).transform.position = transformPosition;
                 Matrix4x4 m = Matrix4x4.Translate(new Vector3(0f, 0, size));
                 Vector3 posGameObject = Extrude.transform.GetChild(i).position;
                 Extrude.transform.GetChild(i).position = m.MultiplyPoint3x4(posGameObject);
@@ -456,6 +463,20 @@ public class ExtrusionBezier : MonoBehaviour
             // afficher face de l'extrusion
             CreeFace(BezierList, CourbeExtrude1);
         }
+    }
+    
+    public static Vector3 scalePoint(Vector3 point, float scale)
+    {
+        Matrix4x4 mat = new Matrix4x4();
+
+        mat[0, 0] = scale;
+        mat[1, 1] = scale;
+        mat[2, 2] = scale;
+        mat[3, 3] = 1;
+
+        point = mat.MultiplyPoint(point);
+
+        return point;
     }
 
     public Vector3 CalculcentreBezier(List<GameObject> listeGo)
@@ -528,10 +549,11 @@ public class ExtrusionBezier : MonoBehaviour
                 Vector3 dif = CalculcentreBezier(Extrude);
                 for (int j = 0; j < Extrude.transform.childCount; j++)
                 {
-                    float offset = Mathf.Abs(dif.y - Extrude.transform.GetChild(i).position.y);
+                    float offsetx = dif.x - Extrude.transform.GetChild(j).position.x;
+                    float offsety = Mathf.Abs(dif.y - Extrude.transform.GetChild(j).position.y);
                     Vector3 pos = new Vector3();
-                    pos.x = Extrude.transform.GetChild(j).position.x +CourbeBezierGeneralise[i].transform.position.x ;
-                    pos.y = Extrude.transform.GetChild(j).position.y+ CourbeBezierGeneralise[i].transform.position.y+ offset;
+                    pos.x = Extrude.transform.GetChild(j).position.x + CourbeBezierGeneralise[i].transform.position.x  ;
+                    pos.y = Extrude.transform.GetChild(j).position.y + CourbeBezierGeneralise[i].transform.position.y+ offsety ;
                     pos.z = Extrude.transform.GetChild(j).position.z + CourbeBezierGeneralise[i].transform.position.z ;
                     Extrude.transform.GetChild(j).position = pos;
                     CourbeExtrude1.Add(Extrude.transform.GetChild(j).gameObject);
@@ -554,7 +576,6 @@ public class ExtrusionBezier : MonoBehaviour
             }
         }
     }
-
     private Vector3 CalculcentreBezier(GameObject listeGo)
     {
         Vector3 res = new Vector3();
