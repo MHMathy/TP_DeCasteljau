@@ -43,6 +43,8 @@ public class ExtrusionBezier : MonoBehaviour
     private Slider slider;
     public Text scaleValue;
     public Slider sliderScale;
+    private MoveCam _MoveCam;
+    private bool Ismoving = false;
 
     private void Start()
     {
@@ -52,11 +54,20 @@ public class ExtrusionBezier : MonoBehaviour
         slider.value = size;
         scaleValue.text = scale.ToString();
         sliderScale.value = (float)scale;
+        _MoveCam = cam.GetComponent<MoveCam>();
+        _MoveCam.enabled = false;
     }
 
     private void Update()
     {
 
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            Cursor.visible = !Ismoving;
+            _MoveCam.enabled =!Ismoving;
+            Ismoving = !Ismoving;
+        }
+        
         size = (int)slider.value;
         pasValue.text = "Distance : " + slider.value.ToString();
         scale = sliderScale.value;
@@ -434,23 +445,17 @@ public class ExtrusionBezier : MonoBehaviour
             for (int i = 0; i < Extrude.transform.childCount; i++)
             {
                 Matrix4x4 scaleMatrix = Matrix4x4.Scale(new Vector3(scale, scale, scale));
-                Extrude.transform.GetChild(i).position += scaleMatrix.MultiplyPoint3x4(Extrude.transform.GetChild(i).position);
-                
+                Extrude.transform.position += scaleMatrix.MultiplyPoint3x4(Extrude.transform.GetChild(i).position);
                 Matrix4x4 m = Matrix4x4.Translate(new Vector3(0f, 0, size));
                 Vector3 posGameObject = Extrude.transform.GetChild(i).position;
                 Extrude.transform.GetChild(i).position = m.MultiplyPoint3x4(posGameObject);
-
-               
                 CourbeExtrude1.Add(Extrude.transform.GetChild(i).gameObject); 
             }
-
             Relier(CourbeExtrude1, Color.blue);
             LierExtrude(BezierList, CourbeExtrude1, Color.green);
-
             // afficher face de l'extrusion
             CreeFace(BezierList, CourbeExtrude1);
         }
-        else Debug.Log("selectionner point");
     }
 
     public Vector3 CalculcentreBezier(List<GameObject> listeGo)
