@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 using Plane = UnityEngine.Plane;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
@@ -13,7 +14,7 @@ public class ExtrusionBezier : MonoBehaviour
     public Camera cam;
     public float pas;
     private float pasCourbe = 0.08f;
-    private int size;
+    private int size = 0;
     private float scale = 1f;
     private Plane plane;
     public Canvas ui;
@@ -48,7 +49,7 @@ public class ExtrusionBezier : MonoBehaviour
     public Slider sliderpas;
     private MoveCam _MoveCam;
     private bool Ismoving = false;
-
+    private bool IsVisible = true;
     private void Start()
     {
         plane = new Plane(new Vector3(0, 0, -1), 0);
@@ -59,6 +60,7 @@ public class ExtrusionBezier : MonoBehaviour
         sliderScale.value = (float)scale;
         _MoveCam = cam.GetComponent<MoveCam>();
         _MoveCam.enabled = false;
+         IsVisible = true;
     }
 
     private void Update()
@@ -66,15 +68,15 @@ public class ExtrusionBezier : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.P))
         {
-            Cursor.visible = !Ismoving;
+            Cursor.visible = !IsVisible;
             _MoveCam.enabled =!Ismoving;
             Ismoving = !Ismoving;
         }
         
         size = (int)slider.value;
-        distanceValue.text = "Distance : " + slider.value.ToString();
+        distanceValue.text = "Distance : " + slider.value;
         scale = sliderScale.value;
-        scaleValue.text = "Scale : " + sliderScale.value.ToString();
+        scaleValue.text = "Scale : " + sliderScale.value;
         
         //Vider la liste des points selectionés 
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -83,6 +85,12 @@ public class ExtrusionBezier : MonoBehaviour
             selectedObject = null;
             SelectedCourbe = null;
             Debug.Log("Liste vidée");
+        }
+
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            Scene scene = SceneManager.GetActiveScene();
+            SceneManager.LoadScene(scene.name);
         }
 
         //permet de creer un point 
@@ -509,9 +517,9 @@ public class ExtrusionBezier : MonoBehaviour
                 for (int i = 0; i < Extrude.transform.childCount; i++)
                 {
                     Vector3 pos = new Vector3();
-                    pos.x = Extrude.transform.GetChild(i).position.x * cosTheta+Extrude.transform.GetChild(i).position.z * sinTheta ;
+                    pos.x = Extrude.transform.GetChild(i).position.x * cosTheta + Extrude.transform.GetChild(i).position.z * sinTheta ;
                     pos.y = Extrude.transform.GetChild(i).position.y;
-                    pos.z = Extrude.transform.GetChild(i).position.z * cosTheta - Extrude.transform.GetChild(i).position.x * sinTheta +ListeSelectioned[0].transform.GetChild(0).transform.position.z;
+                    pos.z = Extrude.transform.GetChild(i).position.z * cosTheta - Extrude.transform.GetChild(i).position.x * sinTheta + ListeSelectioned[0].transform.GetChild(0).transform.position.z;
                     Extrude.transform.GetChild(i).position = pos;
                     CourbeExtrude1.Add(Extrude.transform.GetChild(i).gameObject);
                 }
@@ -549,11 +557,11 @@ public class ExtrusionBezier : MonoBehaviour
                 Vector3 dif = CalculcentreBezier(Extrude);
                 for (int j = 0; j < Extrude.transform.childCount; j++)
                 {
-                    float offsetx = dif.x - Extrude.transform.GetChild(j).position.x;
+                    float offsetx = Mathf.Abs(dif.x - Extrude.transform.GetChild(j).position.x);
                     float offsety = Mathf.Abs(dif.y - Extrude.transform.GetChild(j).position.y);
                     Vector3 pos = new Vector3();
                     pos.x = Extrude.transform.GetChild(j).position.x + CourbeBezierGeneralise[i].transform.position.x  ;
-                    pos.y = Extrude.transform.GetChild(j).position.y + CourbeBezierGeneralise[i].transform.position.y+ offsety ;
+                    pos.y = Extrude.transform.GetChild(j).position.y + CourbeBezierGeneralise[i].transform.position.y ;
                     pos.z = Extrude.transform.GetChild(j).position.z + CourbeBezierGeneralise[i].transform.position.z ;
                     Extrude.transform.GetChild(j).position = pos;
                     CourbeExtrude1.Add(Extrude.transform.GetChild(j).gameObject);
@@ -567,6 +575,7 @@ public class ExtrusionBezier : MonoBehaviour
                     CreeFace(BezierList, CourbeExtrude1);
                 }
                 LierExtrude(CourbeExtrudePrec, CourbeExtrude1, Color.red);
+                CreeFace(CourbeExtrudePrec, CourbeExtrude1);
                 CourbeExtrudePrec.Clear();
                 foreach (var point in CourbeExtrude1)
                 {
