@@ -461,9 +461,9 @@ public class ExtrusionBezier : MonoBehaviour
                var transformPosition = Extrude.transform.GetChild(i).transform.position;
                transformPosition = scalePoint(transformPosition, scale);
                Extrude.transform.GetChild(i).transform.position = transformPosition;
-                Matrix4x4 m = Matrix4x4.Translate(new Vector3(0f, 0, size));
+               Matrice.Matrice3x3 Mat = Matrice.Matrice3x3.CreateTranslation(new Vector3(0f, 0, size));
                 Vector3 posGameObject = Extrude.transform.GetChild(i).position;
-                Extrude.transform.GetChild(i).position = m.MultiplyPoint3x4(posGameObject);
+                Extrude.transform.GetChild(i).position  = Mat * posGameObject;
                 CourbeExtrude1.Add(Extrude.transform.GetChild(i).gameObject); 
             }
             Relier(CourbeExtrude1, Color.blue);
